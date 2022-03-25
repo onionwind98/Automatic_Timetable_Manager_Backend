@@ -34,7 +34,7 @@ class authenticationController extends Controller
             'token' => $token
         ];
 
-        return $response;
+        return response($response, 201);
     }
 
     public function register(Request $request) {
@@ -115,7 +115,7 @@ class authenticationController extends Controller
         return $user;
     }
 
-    public function checkPhoneNumber(Request $request) {
+    public function checkEmail(Request $request) {
         $data = $request->validate([
             'email' => 'required',
         ]);

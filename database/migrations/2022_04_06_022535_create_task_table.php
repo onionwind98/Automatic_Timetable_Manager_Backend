@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('task', function (Blueprint $table) {
             $table->id('taskID');
             $table->unsignedBigInteger('timetableID')->nullable();
+            $table->unsignedBigInteger('userID');
             $table->string('title');
             $table->double('priorityLevel');
             $table->string('description')->nullable();
@@ -26,6 +27,7 @@ return new class extends Migration
 
         Schema::table('task', function (Blueprint $table) {
             $table->foreign('timetableID')->references('timetableID')->on('timetable');
+            $table->foreign('userID')->references('userID')->on('users');
         });
     }
 

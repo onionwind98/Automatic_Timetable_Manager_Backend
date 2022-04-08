@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\authenticationController;
+use App\Http\Controllers\taskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +20,11 @@ use App\Http\Controllers\authenticationController;
 Route::group(['middleware' => ['auth:sanctum']], function () {
     // return $request->user();
     Route::get('/logout', [authenticationController::class,'logout']);
-    
+
+    Route::post('/addTask', [taskController::class,'addTask']);
+    Route::get('/getTask', [taskController::class,'getTask']);
+    Route::post('/deleteTask', [taskController::class,'deleteTask']);
+
 });
 
 Route::post('/login', [authenticationController::class,'login']);

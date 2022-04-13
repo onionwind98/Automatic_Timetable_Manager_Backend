@@ -26,6 +26,23 @@ class taskController extends Controller
 
     }
 
+    public function editTask(Request $req){
+        $task = Task::where('taskID',$req->taskID)
+        ->update([
+            'title'=>$req->title,
+            'priorityLevel'=>$req->priorityLevel,
+            'description'=>$req->description,
+            'preferredTime'=>$req->preferredTime,
+            'repeatOn'=>$req->repeatOn
+        ]);
+
+        if($task){
+            return ["Result"=>'Data saved'];
+        }else{
+            return ["Result"=>"Data not saved!"];
+        }
+    }
+
     public function getTask(){
         $task = Task::all();
         return $task;

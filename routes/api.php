@@ -22,6 +22,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/logout', [authenticationController::class,'logout']);
 
     Route::post('/addTask', [taskController::class,'addTask']);
+    Route::post('/editTask', [taskController::class,'editTask']);
     Route::get('/getTask', [taskController::class,'getTask']);
     Route::post('/deleteTask', [taskController::class,'deleteTask']);
 

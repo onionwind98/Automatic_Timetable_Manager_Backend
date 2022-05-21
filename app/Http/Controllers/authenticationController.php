@@ -91,28 +91,61 @@ class authenticationController extends Controller
         return $user;
     }
 
-    public function resetPassword(Request $request) {
+    public function changePassword(Request $request) {
         $data = $request->validate([
             'oldPassword' => 'required|string',
             'newPassword' => 'required|string',
-            'email' => 'required'
+            'userID' => 'required'
         ]);
 
-        $user = User::where('email',$data['email'])->first();
+        $user = User::where('userID',$data['userID'])->first();
 
          // Check password
-         if(!$user || !Hash::check($data['oldPassword'], $user->password)) {
+         if(!Hash::check($data['oldPassword'], $user->password)) {
             return response([
-                'message' => 'Bad creds'
+                'message' => 'Wrong Old Password!'
             ], 401);
+        }else{
+            $userPassword = User::where('userID', $data['userID'])
+            ->update([
+                'password' => bcrypt($data['newPassword'])
+            ]);
+            if($userPassword){
+                return response([
+                    'message' => 'Password Changed!'
+                ], 401);
+            }else{
+                return response([
+                    'message' => 'Password Changing Failed!'
+                ], 401);
+            }
         }
+    }
 
-        $userPassword = User::where('email', $data['email'])
-        ->update([
-            'password' => bcrypt($data['newPassword'])
+    public function changeEmail(Request $request) {
+        $data = $request->validate([
+            'userID' => 'required',
+            'newEmail' => 'required|string',
         ]);
 
-        return $user;
+        $user = User::where('userID',$data['userID'])->first();
+
+        $checkDuplicateEmail = User::where('email',$data['newEmail'])->first();
+
+        if($checkDuplicateEmail){
+            return response([
+                'message' => 'Email Not Available!'
+            ], 401);
+        }
+        else{
+            $userPassword = User::where('userID', $data['userID'])
+            ->update([
+                'email' => $data['newEmail']
+            ]);
+            return response([
+                'message' => 'Email Changed'
+            ], 401);;
+        }
     }
 
     public function checkEmail(Request $request) {

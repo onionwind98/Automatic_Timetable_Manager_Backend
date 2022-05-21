@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('timeslot', function (Blueprint $table) {
             $table->id('timeslotID');
-            $table->string('timeRange');
+            $table->string('startTime');
+            $table->string('endTime');
         });
     }
 

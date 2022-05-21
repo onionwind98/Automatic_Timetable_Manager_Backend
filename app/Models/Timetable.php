@@ -5,19 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Task extends Model
+class Timetable extends Model
 {
     use HasFactory;
-    protected $table = 'task';
+    protected $table = 'timetable';
     public $timestamps = false;
     protected $fillable = [
+        'timeslotID',
         'userID',
-        'title',
-        'priorityLevel',
-        'description',
-        'status',
-        'preferredTime',
-        'preferredDate',
-        'taskColor'
+        'date',
+        'taskID'
     ];
+
 }

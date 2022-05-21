@@ -13,15 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('task_timeslot', function (Blueprint $table) {
-            $table->primary(['taskID','timeslotID']);
+        Schema::create('timetable', function (Blueprint $table) {
+            $table->primary(['timeslotID','userID','date']);
             $table->unsignedBigInteger('taskID');
             $table->unsignedBigInteger('timeslotID');
+            $table->unsignedBigInteger('userID');
+            $table->string('date');
         });
 
-        Schema::table('task_timeslot', function (Blueprint $table) {
+        Schema::table('timetable', function (Blueprint $table) {
             $table->foreign('taskID')->references('taskID')->on('task');
             $table->foreign('timeslotID')->references('timeslotID')->on('timeslot');
+            $table->foreign('userID')->references('userID')->on('users');
         });
     }
 
@@ -32,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('task_timeslot');
+        Schema::dropIfExists('timetable');
     }
 };

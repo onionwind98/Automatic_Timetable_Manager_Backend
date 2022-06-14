@@ -84,14 +84,20 @@ class authenticationController extends Controller
             return response([
                 'message' => 'Old Password Entered!'
             ], 401);
+        }else{
+            $deleteResetToken=User::where('email',$data['email'])
+            ->update([
+                'resetToken' => 0
+            ]);
+            $userPassword = User::where('email', $data['email'])
+            ->update([
+                'password' => bcrypt($data['newPassword'])
+            ]);
+    
+            return $user;
         }
 
-        $userPassword = User::where('email', $data['email'])
-        ->update([
-            'password' => bcrypt($data['newPassword'])
-        ]);
-
-        return $user;
+        
     }
 
     public function changePassword(Request $request) {
@@ -194,10 +200,7 @@ class authenticationController extends Controller
                 'message' => 'Invalid Code'
             ];
         }else{
-            $deleteResetToken=User::where('email',$data['email'])
-            ->update([
-                'resetToken' => 0
-            ]);
+            
 
             // return new VerficationMail();
             return $user[0];

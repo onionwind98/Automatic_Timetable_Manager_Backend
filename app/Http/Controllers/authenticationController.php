@@ -165,6 +165,7 @@ class authenticationController extends Controller
                 'message' => 'Invalid Email Address'
             ];
         }else{
+            echo 'sending email';
             $resetToken = rand(100000,999999);
             $email = new VerificationMail;
             $email->resetToken = $resetToken;

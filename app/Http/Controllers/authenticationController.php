@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Mail\VerificationMail;
+use Illuminate\Support\Facades\Mail;
 use Auth;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -46,6 +48,7 @@ class authenticationController extends Controller
         $user = User::create([
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
+            'resetToken' =>0
         ]);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
@@ -148,10 +151,12 @@ class authenticationController extends Controller
         }
     }
 
-    public function checkEmail(Request $request) {
+    public function checkSendEmail(Request $request) {
         $data = $request->validate([
             'email' => 'required',
         ]);
+
+        
 
         $user = User::where('email',$data['email'])->get();
         // echo $user;
@@ -160,6 +165,41 @@ class authenticationController extends Controller
                 'message' => 'Invalid Email Address'
             ];
         }else{
+            $resetToken = rand(100000,999999);
+            $email = new VerificationMail;
+            $email->resetToken = $resetToken;
+            $userResetToken = User::where('email',$data['email'])
+            ->update([
+                'resetToken' => $resetToken
+            ]);
+            Mail::to($data['email'])->send($email);
+
+            // return new VerficationMail();
+            return $user[0];
+        }
+    }
+
+    public function checkValidationCode(Request $request) {
+        $data = $request->validate([
+            'email' => 'required',
+            'verificationCode' => 'required',
+        ]);
+
+        
+
+        $user = User::where('email',$data['email'])->get();
+        // echo $user;
+        if( $user[0]->resetToken != $data['verificationCode']){
+            return [
+                'message' => 'Invalid Code'
+            ];
+        }else{
+            $deleteResetToken=User::where('email',$data['email'])
+            ->update([
+                'resetToken' => 0
+            ]);
+
+            // return new VerficationMail();
             return $user[0];
         }
     }

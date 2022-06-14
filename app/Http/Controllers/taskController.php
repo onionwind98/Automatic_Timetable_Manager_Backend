@@ -75,25 +75,10 @@ class taskController extends Controller
             ->where('taskID',$task[$i]['taskID'])->get();
             $task[$i]['assignedDate']=$timetable[0]['date'];
 
-            if($task[$i]['priorityLevel']==5){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[3]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($task[$i]['priorityLevel']==4||$task[$i]['priorityLevel']==3){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[2]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($task[$i]['priorityLevel']==2||$task[$i]['priorityLevel']==1){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[1]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-
+            $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
+            $endTimeslot = Timeslot::where('timeslotID',$timetable[count($timetable)-1]['timeslotID'])->get();
+            $task[$i]['startTime']= $startTimeslot[0]['startTime'];
+            $task[$i]['endTime']= $endTimeslot[0]['endTime'];
             
         }
         return $task;
@@ -106,24 +91,11 @@ class taskController extends Controller
             ->where('taskID',$task[$i]['taskID'])->get();
             $task[$i]['assignedDate']=$timetable[0]['date'];
 
-            if($task[$i]['priorityLevel']==5){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[3]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($task[$i]['priorityLevel']==4||$task[$i]['priorityLevel']==3){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[2]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($task[$i]['priorityLevel']==2||$task[$i]['priorityLevel']==1){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[1]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
+            $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
+            $endTimeslot = Timeslot::where('timeslotID',$timetable[count($timetable)-1]['timeslotID'])->get();
+            $task[$i]['startTime']= $startTimeslot[0]['startTime'];
+            $task[$i]['endTime']= $endTimeslot[0]['endTime'];
+            
 
             
         }
@@ -145,26 +117,14 @@ class taskController extends Controller
             ->where('taskID',$taskIDList[$i])->get();
             $temp = Task::where('taskID',$taskIDList[$i])->get();
             $task[$i] = $temp[0];
+            $task[$i]['assignedDate']=$req->today;
             // echo $task[$i];
 
-            if($task[$i]['priorityLevel']==5){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[3]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($task[$i]['priorityLevel']==4||$task[$i]['priorityLevel']==3){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[2]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($task[$i]['priorityLevel']==2||$task[$i]['priorityLevel']==1){
-                $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$timetable[1]['timeslotID'])->get();
-                $task[$i]['startTime']= $startTimeslot[0]['startTime'];
-                $task[$i]['endTime']= $endTimeslot[0]['endTime'];
-            }
+            $startTimeslot = Timeslot::where('timeslotID',$timetable[0]['timeslotID'])->get();
+            $endTimeslot = Timeslot::where('timeslotID',$timetable[count($timetable)-1]['timeslotID'])->get();
+            $task[$i]['startTime']= $startTimeslot[0]['startTime'];
+            $task[$i]['endTime']= $endTimeslot[0]['endTime'];
+            
 
             
         }
@@ -195,18 +155,18 @@ class taskController extends Controller
         }
     }
 
-    // public function updateTaskStatus(Request $req){
-    //     $task = Task::where('taskID',$req->taskID)
-    //     ->update([
-    //         'status'=>$req->taskStatus,
-    //     ]);
+    public function updateTaskStatus(Request $req){
+        $task = Task::where('taskID',$req->taskID)
+        ->update([
+            'status'=>$req->status,
+        ]);
 
-    //     if($task){
-    //         return ["Result"=>'Data saved'];
-    //     }else{
-    //         return ["Result"=>"Data not saved!"];
-    //     }
-    // }
+        if($task){
+            return ["Result"=>'Data saved'];
+        }else{
+            return ["Result"=>"Data not saved!"];
+        }
+    }
 
     public function updateListOfTaskStatus(Request $req){
 

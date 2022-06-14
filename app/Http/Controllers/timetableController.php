@@ -9,15 +9,6 @@ use App\Models\Timeslot;
 
 class timetableController extends Controller
 {
-    // public function generateTimetable(Request $req){
-    //     $timeslot = Timeslot::all();
-    //     $this->validatePriorityLevel($req->taskList, $req->dateRange);
-
-
-    //     return $req->taskList[0];
-    //     // return $this->allocateTimeslot($req->taskList[0],2);
-    // }
-
     public function addToTimetable(Request $req){
         //get all task in selected dateRange by userID
         $timetableInRange = Timetable::where('userID',$req->userID)
@@ -55,7 +46,7 @@ class timetableController extends Controller
 
         $this->validatePriorityLevel($taskInvolved, $req->dateRange);
 
-        return ["Result"=>$taskInvolved];
+        return ["Result"=>count($taskInvolved)];
     }
 
     private function validatePriorityLevel($taskList, $dateRange){
@@ -93,24 +84,31 @@ class timetableController extends Controller
             $date=$taskList['preferredDate'];
         }
 
-        //get available timeslot
-        $timeslot=Timeslot::all()->toArray();
-        $timeslotLength1 = count($timeslot);
-        for($j=0; $j<$timeslotLength1; $j++){ 
-            $checkAvailable = Timetable::where('timeslotID',$timeslot[$j]['timeslotID'])
-                ->Where('userID', $taskList['userID'])
-                ->Where('date', $date)->get();
-
-            if(count($checkAvailable)!=null){
-                unset($timeslot[$j]);
-            }
-        }
-
+        $timeslot = $this->getAvailableTimeslot($taskList['userID'],$date);
         $timeslot = array_values($timeslot);
+
+
+        //Get available timeslot, if not enough timeslot, forward date to next day
+        $tempTimeslotList = $this->checkEnoughTimeslot($timeslot,$timeslotAmount);
+        while(empty($tempTimeslotList)){
+            $tempDate = explode("-",$date);
+                $tempDay = (int)$tempDate[2]+1;
+                $date=$tempDate[0].'-'.$tempDate[1].'-'.sprintf("%02d", $tempDay);
+    
+                $timeslot = $this->getAvailableTimeslot($taskList['userID'],$date);
+                $timeslot = array_values($timeslot);
+
+                $tempTimeslotList = $this->checkEnoughTimeslot($timeslot,$timeslotAmount);
+        }
+        $timeslot=$tempTimeslotList;
+        
+
 
         $preferredTime='';
         $preferredTimeslot='';
         $availablePreferredTimeslot=[];
+
+
 
         //if the task has preferredTimeslot
         if(!empty(json_decode($taskList['preferredTime']))){
@@ -122,18 +120,13 @@ class timetableController extends Controller
                 $preferredTimeslot=$temp;
             }
             
-            $timeslotLength2 = count($timeslot);
-            $preferredTimeslotLength = count($preferredTimeslot);
-
             // check for preferred timeslot availability
-            for($j=0; $j<$preferredTimeslotLength; $j++){ 
-                // $checkAvailable = Timetable::where('timeslotID',$preferredTimeslot[$j]['timeslotID'])
-                // ->Where('userID', $taskList['userID'])
-                // ->Where('date', $date)->get();
-                for($i=0; $i<$timeslotLength2; $i++){ 
-                    if(array_key_exists($i,$timeslot)){
-                        if($preferredTimeslot[$j]['timeslotID']==$timeslot[$i]['timeslotID']){
-                            $availablePreferredTimeslot[]=$timeslot[$i];
+            for($j=0; $j<count($preferredTimeslot); $j++){ 
+                for($i=0; $i<count($timeslot); $i++){ 
+                    foreach($timeslot[$i] as $item){
+                        if($preferredTimeslot[$j]['timeslotID']==$item['timeslotID']){
+                            $availablePreferredTimeslot[]=$item;
+
                         }
                     }
                 }
@@ -141,50 +134,61 @@ class timetableController extends Controller
 
             //assign task to timeslot
             //if the preferred timeslot is occupied
-
-            if(count($availablePreferredTimeslot)==0||count($availablePreferredTimeslot)<$timeslotAmount){
-                //exclude timslot id 46-48 for random assignment of task
-                for($i=0; $i<count($timeslot);$i++){
-                    if($timeslot[$i]['timeslotID']==46||$timeslot[$i]['timeslotID']==47||$timeslot[$i]['timeslotID']==48){
-                        unset($timeslot[$i]);
-                    }
-                }
+            if(count($availablePreferredTimeslot)==0||count($availablePreferredTimeslot)<count($preferredTimeslot)){
                 $timeslot = array_values($timeslot);
-                $randomTimeslot=array_rand($timeslot);
+                //random timeslot Set
+                $random1=array_rand($timeslot);
+
+                //remove last timeslotAmount-1 item
+                $temp=$timeslot[$random1];
+                $tempLength=count($temp);
+                for($i=$tempLength-1;$i>=$tempLength-($timeslotAmount-1);$i--){
+                    unset($temp[$i]);
+                }
+                
+                //random starting timeslot
+                $random2=array_rand($temp);
 
                 for($i=0; $i<$timeslotAmount;$i++){
                     $timetable = Timetable::create([
                         'taskID'=>$taskList['taskID'],
-                        'timeslotID'=> $timeslot[$randomTimeslot+$i]['timeslotID'],
+                        'timeslotID'=>$timeslot[$random1][$random2+$i]['timeslotID'],
                         'userID'=>$taskList['userID'],
                         'date'=>$date,
                     ]);
                 }
             }else{//if preferred timeslot is not occupied
 
-                for($i=0; $i<$timeslotAmount;$i++){
+                for($i=0; $i<count($availablePreferredTimeslot);$i++){
                     $timetable = Timetable::create([
                         'taskID'=>$taskList['taskID'],
-                        'timeslotID'=> $availablePreferredTimeslot[$i]['timeslotID'],
+                        'timeslotID'=>$availablePreferredTimeslot[$i]['timeslotID'],
                         'userID'=>$taskList['userID'],
                         'date'=>$date,
                     ]);
                 }
             }
         }else{
-            //exclude timslot id 46-48 for random assignment of task
-            for($i=0; $i<count($timeslot);$i++){
-                if($timeslot[$i]['timeslotID']==46||$timeslot[$i]['timeslotID']==47||$timeslot[$i]['timeslotID']==48){
-                    unset($timeslot[$i]);
-                }
-            }
+            
+           
             $timeslot = array_values($timeslot);
-            $randomTimeslot=array_rand($timeslot);
+            //random timeslot Set
+            $random1=array_rand($timeslot);
+
+            //remove last timeslotAmount-1 item
+            $temp=$timeslot[$random1];
+            $tempLength=count($temp);
+            for($i=$tempLength-1;$i>=$tempLength-($timeslotAmount-1);$i--){
+                unset($temp[$i]);
+            }
+            
+            //random starting timeslot
+            $random2=array_rand($temp);
 
             for($i=0; $i<$timeslotAmount;$i++){
                 $timetable = Timetable::create([
                     'taskID'=>$taskList['taskID'],
-                    'timeslotID'=> $timeslot[$randomTimeslot+$i]['timeslotID'],
+                    'timeslotID'=>$timeslot[$random1][$random2+$i]['timeslotID'],
                     'userID'=>$taskList['userID'],
                     'date'=>$date,
                 ]);
@@ -213,24 +217,11 @@ class timetableController extends Controller
                 }
             }
 
-            if($timetableList[$i]['taskDetails']['priorityLevel']==5){
-                $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$taskTemp[3])->get();
-                $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
-                $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($timetableList[$i]['taskDetails']['priorityLevel']==4||$timetableList[$i]['taskDetails']['priorityLevel']==3){
-                $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$taskTemp[2])->get();
-                $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
-                $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($timetableList[$i]['taskDetails']['priorityLevel']==2||$timetableList[$i]['taskDetails']['priorityLevel']==1){
-                $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$taskTemp[1])->get();
-                $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
-                $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
-            }
+            $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
+            $endTimeslot = Timeslot::where('timeslotID',$taskTemp[count($taskTemp)-1])->get();
+            $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
+            $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
+            
         }
         return $timetableList;
     }
@@ -253,25 +244,59 @@ class timetableController extends Controller
                 }
             }
 
-            if($timetableList[$i]['taskDetails']['priorityLevel']==5){
-                $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$taskTemp[3])->get();
-                $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
-                $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($timetableList[$i]['taskDetails']['priorityLevel']==4||$timetableList[$i]['taskDetails']['priorityLevel']==3){
-                $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$taskTemp[2])->get();
-                $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
-                $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
-            }
-            elseif($timetableList[$i]['taskDetails']['priorityLevel']==2||$timetableList[$i]['taskDetails']['priorityLevel']==1){
-                $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
-                $endTimeslot = Timeslot::where('timeslotID',$taskTemp[1])->get();
-                $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
-                $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
-            }
+            $startTimeslot = Timeslot::where('timeslotID',$taskTemp[0])->get();
+            $endTimeslot = Timeslot::where('timeslotID',$taskTemp[count($taskTemp)-1])->get();
+            $timetableList[$i]['taskDetails']['startTime']= $startTimeslot[0]['startTime'];
+            $timetableList[$i]['taskDetails']['endTime']= $endTimeslot[0]['endTime'];
+            
         }
         return $timetableList;
+    }
+
+    private function getAvailableTimeslot($userID,$date ){
+        //get available timeslot
+        $timeslot=Timeslot::all()->toArray();
+        $timeslotLength1 = count($timeslot);
+        for($j=0; $j<$timeslotLength1; $j++){ 
+            $checkAvailable = Timetable::where('timeslotID',$timeslot[$j]['timeslotID'])
+                ->Where('userID', $userID)
+                ->Where('date', $date)->get();
+
+            if(count($checkAvailable)!=null){
+                unset($timeslot[$j]);
+            }
+        }
+        return $timeslot;
+    }
+
+    private function checkEnoughTimeslot($timeslot,$timeslotAmount){
+        //check if there is suitable timeslot 
+        $previous = $timeslot[0];
+        $result = [];
+        $consecutive = [];
+
+        foreach($timeslot as $item){
+            if($item['timeslotID']== $previous['timeslotID']+1){
+                $consecutive[] = $item;
+            }else{
+                $result[]=$consecutive;
+                $consecutive = array($item);
+            }
+            $previous = $item;
+        }
+        $result[]=$consecutive;
+        unset($result[0]);
+        $result = array_values($result);
+
+        $resultLength=count($result);
+        for($i=0;$i<$resultLength;$i++){
+
+            if(count($result[$i])<$timeslotAmount){
+                unset($result[$i]);
+            }
+        }
+        $result = array_values($result);
+
+        return $result;
     }
 }

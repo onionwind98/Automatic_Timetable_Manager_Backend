@@ -36,7 +36,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/getTodaySchedule', [taskController::class,'getTodaySchedule']);
     Route::post('/deleteTask', [taskController::class,'deleteTask']);
     Route::post('/removeTaskFromTimetable', [taskController::class,'removeTaskFromTimetable']);
-    // Route::post('/updateTaskStatus', [taskController::class,'updateTaskStatus']);
+    Route::post('/updateTaskStatus', [taskController::class,'updateTaskStatus']);
     Route::post('/updateListOfTaskStatus', [taskController::class,'updateListOfTaskStatus']);
 
     Route::post('/addToTimetable', [timetableController::class,'addToTimetable']);
@@ -50,7 +50,8 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 Route::post('/login', [authenticationController::class,'login']);
 Route::post('/register', [authenticationController::class,'register']);
 Route::post('/forgetPassword', [authenticationController::class,'forgetPassword']);
-Route::post('/checkEmail', [authenticationController::class,'checkEmail']);
+Route::post('/checkSendEmail', [authenticationController::class,'checkSendEmail']);
+Route::post('/checkValidationCode', [authenticationController::class,'checkValidationCode']);
 
 Route::post('/test', [testController::class,'test']);
 

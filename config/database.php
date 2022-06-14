@@ -15,7 +15,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'mysql'),
+    'default' => env('DB_CONNECTION', 'mysql_heroku_production'),
 
     /*
     |--------------------------------------------------------------------------
@@ -62,6 +62,17 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
+
+        'mysql_heroku_production' => array(
+            'driver' => 'mysql',
+            'host' => 'us-cdbr-east-05.cleardb.net',
+            'database' => 'heroku_133d8cdea6b174e',
+            'username' => 'bdabf531a94f51',
+            'password' => 'e44a3ef8',
+            'charset' => 'utf8',
+            'collation' => 'utf8_unicode_ci',
+            'prefix' => '',
+        ),
 
         'pgsql' => [
             'driver' => 'pgsql',
